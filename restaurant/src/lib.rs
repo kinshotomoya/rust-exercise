@@ -42,7 +42,7 @@ mod back_of_house {
 
 
     fn fix_incorrect_order() {
-        cook_order();
+        cook_orcder();
         super::serve_order();
     }
 

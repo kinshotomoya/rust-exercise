@@ -48,6 +48,7 @@ fn main() {
         // &rectを関数の引数にしているので、ここでもまだrectの所有権は有効
         println!("{}", rect.height);
 
+        // 参照を
         fn area(rectangle: &Rectangle) -> u32 {
             rectangle.width * rectangle.height
         }
@@ -96,12 +97,33 @@ fn main() {
     // 引数を二つ以上受け取るインスタンスメソッドを定義する
     {
         #[derive(Debug)]
+        // struct Rectangle {
+        //     width: u32,
+        //     height: u32
+        // }
+        //
+        // impl Rectangle {
+        //     fn area(&self) -> u32 {
+        //         self.width * self.height
+        //     }
+        //
+        //     fn can_hold(&self, other: &Rectangle) -> bool {
+        //         self.width > other.width && self.height > other.height
+        //     }
+        // }
+        //
+        // let rect1 = Rectangle { width: 30, height: 50 };
+        // let rect2 = Rectangle { width: 40, height: 60 };
+        //
+        // println!("{}", rect1.can_hold(&rect2));
+
         struct Rectangle {
             width: u32,
             height: u32
         }
 
         impl Rectangle {
+            // インスタンスメソッドでは&selfが必要
             fn area(&self) -> u32 {
                 self.width * self.height
             }
@@ -111,11 +133,15 @@ fn main() {
             }
         }
 
-        let rect1 = Rectangle { width: 30, height: 50 };
-        let rect2 = Rectangle { width: 40, height: 60 };
-
+        let rect1 = Rectangle {
+            width: 30,
+            height: 50
+        };
+        let rect2 = Rectangle {
+            width: 10,
+            height: 20
+        };
         println!("{}", rect1.can_hold(&rect2));
-
     }
 
     //  関連関数
@@ -138,6 +164,35 @@ fn main() {
         let rec = Rectangle::square(44);
 
         println!("{:?}", rec);
+    }
+
+    // インスタンスの値を変更したい場合は、mutを定義する
+    {
+        struct Rectangle {
+            name: String,
+            width: u32,
+            height: u32
+        }
+
+        impl Rectangle {
+            fn convert_name_to(&mut self, to_name: &str) {
+                self.name = to_name.to_string();
+            }
+        }
+
+        let mut rect = Rectangle {
+            name: String::from("四角"),
+            width: 10,
+            height: 20
+        };
+
+        rect.convert_name_to("sikaku");
+        println!("{}", rect.name);
+
+
+
+
+
     }
 
 }

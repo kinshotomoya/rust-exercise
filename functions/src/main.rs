@@ -21,10 +21,15 @@ fn main() {
     let return_result: i32 = return_function(32);
     println!("{}", return_result);
 
+    for number in (1..4).rev() {
+        println!("number is {}", number)
+    }
+
 }
 
 
 // ただの関数定義だとこれは文になるので、何も値を返さない
+// 式の場合は、セミコロンはつけない
 fn another_function(x: i32) {
     x + 1;
 }

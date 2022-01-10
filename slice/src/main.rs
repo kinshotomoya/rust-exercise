@@ -1,23 +1,51 @@
 fn main() {
+
+    {
+        fn add_str(word: &mut String) {
+            word.push_str(" gym");
+        }
+
+        let mut word = String::from("gold");
+        add_str(&mut word);
+        println!("{}", word);
+    }
+
+    {
+        fn convert_bytes(word: &mut String) {
+            // as_bytesメソッドはヒープデータを直接byteに変換するのではなく、新しくbyteデータを作成するだけ
+            word.as_bytes();
+        }
+
+        let mut word = String::from("tokyo");
+        convert_bytes(&mut word);
+        println!("{}", word);
+
+    }
+
+    {
+        let word = String::from("kinsho tomoya");
+        let sliced_word: &str = &word[..6];
+        println!("{}", &word[..6]);
+    }
+
     {
 
         fn first_word(word: &String) -> &str {
             let word_byte = word.as_bytes();
-
             for (i, &item) in word_byte.iter().enumerate() {
                 if item == b' ' {
-                    return &word[0..i];
+                    return &word[..i];
                 }
             }
-
             &word[..]
         }
 
         let mut word: String = String::from("hello world");
-        let result = first_word(&word);
+        let result: &str = first_word(&word);
 
-        // word.clear(); first_word(&word)で不変借用をしているので、word.clear()と可変借用はできない
+        // first_word(&word)で不変借用をしているので、word.clear()と可変借用はできない
         // とコンパイルエラーが出る
+        // word.clear();
         println!("{}", result)
 
     }
@@ -25,8 +53,8 @@ fn main() {
     {
 
         let s = String::from("hello world");
-        let hello = &s[1..];
-        let world = &s[6..11];
+        let hello: &str = &s[0..5];
+        let world: &str = &s[6..11];
 
         println!("{} {}", hello, world)
 

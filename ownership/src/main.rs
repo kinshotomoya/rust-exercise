@@ -35,6 +35,7 @@ fn main() {
 
     // 以下は、xをyにコピーしている
     // これらはスタックに保存される
+    // プリミティブ型はヒープに格納されずにスタックに格納される
     let x = 5;
     let y = x;
 
@@ -76,9 +77,17 @@ fn main() {
     }// nameのヒープ上のデータがdropされる（解放される）
 
 
+    let num: i32 = 10;
+    makes_copy(num);
+    println!("{}", num); // numはi32型であり、プリミティブ型であるのでムーブされずにコピーされる。なので、関数の引数に渡した後でも利用できる
 
-    let full_name = String::from("kinsho tomoya");
-    let full_name_backed = take_and_give_back(full_name);
+    fn makes_copy(num: i32) {
+        println!("num is {}", num);
+    }
+
+
+    let full_name = String::from("kinsho tomoya"); // full_nameがスコープに入る
+    let full_name_backed = take_and_give_back(full_name); // full_nameがtake_and_give_backにムーブされ、take_and_give_backの戻り値がfull_name_backedにムーブされる。
 
     println!("{}", full_name_backed);
 

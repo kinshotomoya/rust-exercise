@@ -1,5 +1,4 @@
 fn main() {
-
     // ベクタ
     {
         let v: Vec<i32> = Vec::new();
@@ -30,11 +29,11 @@ fn main() {
     {
 
         // 可変借用と不変借用は両立できない
-        let mut v = vec![1, 2, 3, 4, 5];
+        let mut v: Vec<i32> = vec![1, 2, 3, 4, 5];
 
         // ここで不変借用
-        let first = &v[0];
-        let second = &v[1];
+        let first: &i32 = &v[0];
+        let second: &i32 = &v[1];
 
         //　ここで可変借用
         // v.push(6);
@@ -52,6 +51,15 @@ fn main() {
     }
 
     // for
+
+    {
+        let mut v = vec![1, 2, 3];
+        for i in &mut v {
+            *i += 10
+        }
+        println!("{:?}", v);
+    }
+
     {
         let mut v = vec![1, 2, 3];
         for i in &mut v {

@@ -11,6 +11,7 @@ fn main() {
     // 大文字のスネークケースで定義する
     // 型は明示的に指定しないといけない
     const MAX_POINT: u32 = 10000000;
+    const NAME: &str = "sssss";
 
 
     // シャドーウィング
@@ -89,7 +90,7 @@ fn main() {
     // 固定長になっている
     // 同じ型しか格納できない
     // 後述するベクタ型はサイズを変更できるので便利
-    //  配列は、スタック的な使い方なら向いている
+    // 配列は、スタック的な使い方なら向いている
     let array = [1, 2, 3];
     let array_first: i32 = array[0];
 
@@ -99,8 +100,10 @@ fn main() {
     // これがメモリセーフと謳っている由縁。
     // ↓エラー内容
     // this operation will panic at runtime
-    let index = 10;
-    array[index];
+    // let index = 10;
+    // array[index];
+
+    println!({}, 's')
 
 
 }

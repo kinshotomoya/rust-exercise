@@ -1,3 +1,6 @@
+use std::fmt;
+use std::fmt::Formatter;
+
 // ライフタイム機能に関して実装をもとに理解していく
 // 重要：全ての参照にはライフタイムがある！！！！！！！！！！！！！！！！！！！！
 fn main() {
@@ -91,7 +94,7 @@ fn main() {
             let string2 = String::from("shot string");
             // ここで実際に具体的なstring1, string2をlargest関数に渡している
             // この時渡されるライフタイムは、短い方、つまりstring2のライフタイムが渡されるので
-            // largest関数の戻り値のライフタイムもstring2と同じになる
+            // largest関数の戻り値のライフタイムもstring2と同じになる（実際に戻り値として帰ってくるのは、string1の参照になるが）
             // なので、resultが使えるのはこの内側のスコープの中だけ
             let result = largest(string1.as_str(), string2.as_str());
             // ↑を踏まえるとこれはOK
@@ -190,7 +193,7 @@ fn main() {
 
 
         let novel = String::from("oh my god. i am");
-        let first_sentance = novel.split(".").next().expect("could not found .");
+        let first_sentance: &str = novel.split(".").next().expect("could not found .");
 
         ImportantExcerpt {
             part: first_sentance
@@ -253,7 +256,7 @@ fn main() {
             // このメソッドでコンパイラがやっていることは以下
             // 規則1により、全ての引数に独自のライフタイム注釈がつく
             // 規則2は引数一つの場合なので適応されない
-            // 規則３により、&selfの戻り値型のライフタイムはselfと同じになる
+            // 規則３により、戻り値型のライフタイムは&selfと同じになる
             // fn compareNameLenght(&'a self, name1: &'b str) -> &'a str {
             // この時、aとbの関係が分からない。bはaよりもライフタイムが短い可能性もある
             // なので、 どちらにも'aパラメータを付与して、実際には小さい方のライフタイムだと明示的に示す
@@ -281,6 +284,7 @@ fn main() {
             name: &'a str
         }
 
+
         impl<'a> Person<'a> {
             fn compareNameLenght(&'a self, name1: &'a str) -> &'a str {
                 if name1.len() > self.name.len() {
@@ -297,16 +301,68 @@ fn main() {
         };
 
         {
-            let name = "aaaaaaaa";
+            let name: &'static str = "aaaaaaaa";
             // このresultにセットされる参照は、↑nameへの参照になる
             // nameは内側のスコープを抜けると破棄されると思いきや
             // compareNameLenghtメソッドで戻り値型のライフタイムは、personインスタンスと同じだと定義しているので
             // 内側スコープを抜けても破棄されない！！
+            println!("name: {:p}", name);
             result = person.compareNameLenght(name);
+            println!("result: {:p}", result);
         }
-
+        // ただnameを利用しようとすると、スコープ外だと怒られるので利用はできない
+        // println!("{}", name);
         // なので、ここでresultを利用できる（実際にはnameへの参照）
         println!("longer is {}", result);
+    }
+
+
+    // ↑は文字列スライスは、&'staticだから？？
+    // 検証してみた
+    {
+        struct Person<'a>{
+            name: &'a str
+        }
+
+        struct Person2<'a> {
+            name: &'a str
+        }
+
+       impl fmt::Display for Person2<'_> {
+           fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+               todo!()
+           }
+       }
+
+
+        impl<'a> Person<'a> {
+            fn compareNameLenght(&'a self, person2: &'a Person2) -> &'a Person2{
+                if person2.name.len() > self.name.len() {
+                    person2
+                } else {
+                    person2
+                }
+            }
+        }
+
+        let result;
+        let person: Person = Person{
+            name: "person"
+        };
+
+        {
+            let person2 = Person2{
+                name: "person2"
+            };
+            result = person.compareNameLenght(&person2);
+            println!("result: {:p}", result);
+        }
+        // やっぱりそうだった！！
+        // ↓はエラーでる
+        // resultのライフタイムはperson2のライフタイムになっているので、
+        // 内側スコープを出た時点でperson2は破棄されるので、resultは使えない！！！
+        // なので、一個前の例では&'staticなので、スコープ外でも利用できていた事になる！！！
+        // println!("longer is {}", result);
     }
 
     // これはエラー
@@ -356,6 +412,8 @@ fn main() {
 
         let text2: &str = "text2";
 
+
+        // なので、staticな変数を定義してそれを
 
     }
 

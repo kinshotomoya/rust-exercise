@@ -142,5 +142,38 @@ fn main() {
     }
 
 
+    {
+        let s = &(String::from("A"), 1);
+        // refをつけることで、値の参照を束縛すると定義する
+        let &(ref a, b) = s;
+
+    }
+
+    // {
+    //     let robot_name = Some(String::from("robo!"));
+    //
+    //     match robot_name {
+    //         // robot_nameの所有権は、すでに↓のnameにムーブしている
+    //         Some(name) => println!("{}", name),
+    //         None => println!("no name")
+    //     }
+    //     // なので、↓ではrobot_nameは使えない（削除されている）
+    //     println!("{:?}", robot_name);
+    //
+    // }
+
+    {
+        // こんな時に、refを使う
+
+        let robot_name = Some(String::from("robo"));
+        match robot_name {
+            // refを使うとrobot_nameのデータへの参照をとってきている
+            Some(ref name) => println!("{}", name),
+            None => println!("no name")
+        }
+        println!("{:?}", robot_name);
+
+    }
+
 
 }

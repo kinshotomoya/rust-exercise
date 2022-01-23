@@ -1,5 +1,5 @@
 use std::fmt;
-use std::fmt::Formatter;
+use std::fmt::{Formatter, write};
 
 // ライフタイム機能に関して実装をもとに理解していく
 // 重要：全ての参照にはライフタイムがある！！！！！！！！！！！！！！！！！！！！
@@ -328,9 +328,11 @@ fn main() {
             name: &'a str
         }
 
+        // Display taitを実装することで、カスタムstructの標準出力をカスタムすることができる
+        // 参考：http://doc.rust-jp.rs/rust-by-example-ja/hello/print/print_display.html
        impl fmt::Display for Person2<'_> {
            fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-               todo!()
+               write!(f, "{}", self.name)
            }
        }
 
@@ -347,15 +349,15 @@ fn main() {
 
         let result;
         let person: Person = Person{
-            name: "person"
+            name: "kinsho"
         };
 
         {
             let person2 = Person2{
-                name: "person2"
+                name: "kinsho tomoya"
             };
             result = person.compareNameLenght(&person2);
-            println!("result: {:p}", result);
+            println!("result: {}", result);
         }
         // やっぱりそうだった！！
         // ↓はエラーでる

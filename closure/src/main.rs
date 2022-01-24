@@ -30,7 +30,7 @@ struct Cacher2<T> where T: Fn(u32) -> u32 {
     value: Option<u32>
 }
 
-impl Cacher2<T> {
+impl<T> Cacher2<T> where T: Fn(u32) -> u32{
 
     fn new(calculation: T) -> Cacher2<T> {
         Cacher2 {

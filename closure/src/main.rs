@@ -25,7 +25,7 @@ fn main() {
 }
 
 // TODO: Cacherを以下二点でリファクタする
-// 1. 現状どんな値をargに渡されても、1回目に保存した値しか返さないようになっている（valueをhashmapで持たせるようにする）
+// [DONE] 1. 現状どんな値をargに渡されても、1回目に保存した値しか返さないようになっている（valueをhashmapで持たせるようにする）
 // 2.　u32しか受け取らないようになっているので、ジェネリクスを使ってu32以外も受け取れるようにする
 struct Cacher2<'a, T> where T: Fn(u32) -> u32 {
     calculation: T, // functionを受ける

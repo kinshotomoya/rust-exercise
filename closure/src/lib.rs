@@ -28,7 +28,7 @@ pub mod test {
                 num + 1
             };
 
-            let function4 = |num: u32| num + 1;
+            let function4: fn(u32) -> u32 = |num: u32| num + 1;
 
         }
 

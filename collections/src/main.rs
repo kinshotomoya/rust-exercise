@@ -90,4 +90,36 @@ fn main() {
         ];
 
     }
+
+    // Vec<> -> &strのconvertを行う
+    {
+        pub enum Gym {
+            Gold,
+            Anytime,
+            Konami,
+            Tipness,
+            King,
+        }
+
+        impl Gym {
+            pub fn members() -> Vec<Gym> {
+                vec!(Gym::Gold, Gym::Anytime, Gym::Konami, Gym::Tipness, Gym::King)
+            }
+
+            pub fn name(&self) -> &str {
+                match *self {
+                    Gym::Gold => "ゴールド",
+                    Gym::Anytime => "エニタイム",
+                    Gym::Konami => "コナミ",
+                    Gym::Tipness => "ティップネス",
+                    Gym::King => "キング",
+                }
+            }
+        }
+
+        // collect()メソッドで、iteratorを一旦vecに変換している
+        // joinでvecをStringにできる
+        Gym::members().iter().map(|s| s.name()).collect::<Vec<_>>().join("|").as_str();
+        todo!()
+    }
 }

@@ -96,4 +96,17 @@ fn main() {
     //     Err(e) => println!("")
     // }
 
+
+
+    {
+
+        let regex = r"^日本$";
+        let res = Regex::new(regex).ok().map(|re| {
+            let ca = re.captures("日本").unwrap();
+            println!("{}", ca.len());
+            println!("{}", ca.len().eq(&(6 as usize)));
+        });
+    }
+
+
 }

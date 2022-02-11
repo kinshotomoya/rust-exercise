@@ -1,6 +1,6 @@
+use std::ops::Deref;
+
 fn main() {
-
-
     {
         // Box<T>とすることで、ヒープにデータを格納することができる
         // ↓の場合は。
@@ -11,7 +11,6 @@ fn main() {
 
         // まあこれは、i32に関してはわざわざヒープに持たせなくても良い
         // スタックに持たせとけばいい
-
     }
 
 
@@ -70,10 +69,112 @@ fn main() {
                                                                       Box::new(List::Nil))
             ))
         ));
+    }
 
+    {
+        let x = 5;
+        let y = &x;
+
+        // これはできない、yはxへの参照なので、5とは比較できない
+        // assert_eq!(5, y);
+
+        assert_eq!(5, *y)
+    }
+
+    {
+        // yをBoxとして定義する
+        // つまり、yはxの値を指すポインタを持つ、Boxインスタンスである。
+        // この時、5はヒープに格納される？？
+        let x = 5;
+        let y = Box::new(x);
+        // &と同じで、参照外しができる
+        let aa = *y;
+
+        assert_eq!(5, *y);
+    }
+
+    {
+        // 独自にBox<T>を作ってみる
+
+        struct MyBox<T>(T);
+
+        impl<T> MyBox<T> {
+            fn new(x: T) -> MyBox<T> {
+                MyBox(x)
+            }
+        }
+
+        let x = 5;
+        let y = MyBox::new(x);
+
+        // このままでは、参照外しはできない
+        // Deref traitを実装する必要がある
+        // assert_eq!(5, *y);
 
     }
 
+    {
+        struct MyBox<T>(T);
 
+        impl<T> MyBox<T> {
+            fn new(x: T) -> MyBox<T> {
+                MyBox(x)
+            }
+        }
+
+        impl<T> Deref for MyBox<T> {
+            type Target = T;
+
+            fn deref(&self) -> &Self::Target {
+                // 保持している値の参照を返すメソッド
+                &self.0
+            }
+        }
+
+        let x = 5;
+        let y = MyBox::new(x);
+
+        // Derefを実装したことで参照外しできる
+        // *y は水面下では、*(y.deref())を呼び出していることになっている
+        assert_eq!(5, *y)
+
+        // コンパイラが自動で判断してくれるので、わざわざderefメソッドを実行する必要がない
+    }
+
+    {
+
+        struct MyBox<T>(T);
+
+        impl<T> MyBox<T> {
+            fn new(x: T) -> MyBox<T> {
+                MyBox(x)
+            }
+        }
+
+        impl<T> Deref for MyBox<T> {
+            type Target = T;
+
+            fn deref(&self) -> &Self::Target {
+                // 保持している値の参照を返すメソッド
+                &self.0
+            }
+        }
+
+        fn hello(name: &str) {
+            println!("hello {}", name);
+        }
+
+        let m = MyBox::new(String::from("kinsho"));
+
+        // helloの引数には、&strが必要だが、、
+        // &mとすることで、MyboxはDerefトレイトを実装しているので、内部的にderefメソッドを呼び出して、指しているデータへの参照を返すことができる（&Stringを）
+        // さらに、&Stringは標準でDerefトレイトを実装しているので、Stringのderefメソッドが&strを返すことができている
+        hello(&m);
+
+        // もしこのような参照外し型強制がなかったら、以下のようなコードを書かないといけない
+        // *mで上述した、*(m.deref())を実現している
+        // さらに、&(*m)で&Stringにしている、&(*m)[..]でStringの全文字列を取得している
+        hello(&(*m)[..]);
+    }
 
 }

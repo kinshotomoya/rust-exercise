@@ -177,4 +177,52 @@ fn main() {
         hello(&(*m)[..]);
     }
 
+    // Drop trait
+    {
+
+        struct CustomDropPointer {
+            data: String,
+        }
+
+        impl Drop for CustomDropPointer {
+            fn drop(&mut self) {
+                println!("drop customDropPointer with data: {}", self.data);
+            }
+        }
+
+        let a = CustomDropPointer { data: String::from("data1") };
+        let b = CustomDropPointer { data: String::from("data2") };
+
+        println!("create two customDropPointer");
+
+        // 出力結果は以下のようになる
+        // 明示的にdropメソッドを呼び出さなくてもいい
+        // 順番はインスタンスを作った時と逆にdropメソッドは呼び出される
+        // create two customDropPointer
+        // drop customDropPointer with data: data2
+        // drop customDropPointer with data: data1
+    }
+
+    {
+        // dropは手動で呼び出すことはできないので、早期でdropを呼び出したい場合は
+
+
+        struct CustomDropPointer {
+            data: String,
+        }
+
+        impl Drop for CustomDropPointer {
+            fn drop(&mut self) {
+                println!("drop customDropPointer with data: {}", self.data);
+            }
+        }
+
+        let a = CustomDropPointer { data: String::from("data1") };
+        let b = CustomDropPointer { data: String::from("data2") };
+
+        // std::mem::dropを利用する
+        drop(a)
+
+    }
+
 }

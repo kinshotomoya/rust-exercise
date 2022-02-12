@@ -1,5 +1,6 @@
 use std::thread;
 use std::time::Duration;
+use std::sync::mpsc;
 
 fn main() {
     // rustでは標準で、1:1スレッドを適応している
@@ -57,6 +58,52 @@ fn main() {
     //     handle.join().unwrap();
     //
     // }
+
+    {
+        // チャンネルを使って、スレッド間でメッセージをやり取りする
+
+        let (tx, rx) = mpsc::channel();
+
+        // 転送機をクローンして、複数転送機 -> 受信機にメッセージを送ることができる
+        let tx1 = mpsc::Sender::clone(&tx);
+
+        thread::spawn(move || {
+            let vec = vec![
+                String::from("hi"),
+                String::from("yo"),
+                String::from("hey"),
+                String::from("????")
+            ];
+
+            for v in vec {
+                tx.send(v).unwrap();
+                thread::sleep(Duration::from_micros(10))
+            }
+        });
+
+
+        thread::spawn(move || {
+            let vec = vec![
+                String::from("i"),
+                String::from("am"),
+                String::from("kinsho"),
+                String::from("tomoya")
+            ];
+
+            for v in vec {
+                tx1.send(v).unwrap();
+                thread::sleep(Duration::from_micros(10))
+            }
+        });
+
+        // recvはmainスレッドをブロックする
+        for r in rx {
+            println!("got {}", r);
+        }
+
+        println!("finish");
+
+    }
 
 
 }

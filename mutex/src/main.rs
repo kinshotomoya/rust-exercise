@@ -5,7 +5,7 @@ use std::time::Duration;
 
 fn main() {
     {
-        // Mutex: 一つだけのスレッドにのみ指定したデータのアクセス許可しないを実現するもの
+        // Mutex: 「一つのスレッドにしか指定したデータのアクセス許可をしない」を実現するもの
         let m = Mutex::new(5);
 
         {
@@ -81,6 +81,7 @@ fn main() {
             // value1のlockを取得
             let v1 = value1_for_thread1.lock().unwrap();
             println!("value1 content is {} in thread 1", *v1);
+            drop(v1); // 明示的にv1をdropしてあげると、v1がドロップされるのでvalue1_for_thread1のロックは解除される
             thread::sleep(Duration::from_secs(3));
             println!("waiting for getting value2 in thread 1");
             // value2のlockを取得しようとするが、thread2でvalue2がロックされている
@@ -94,6 +95,7 @@ fn main() {
             // value2のlockを取得
             let v2 = value2_for_thread2.lock().unwrap();
             println!("value2 content is {} in thread 2", *v2);
+            drop(v2);  // 明示的にv2をdropしてあげると、value2_for_thread2のロックは解除される
             thread::sleep(Duration::from_secs(3));
             println!("waiting for getting value1 in thread 2");
             // value1のlockを取得しようとするが、thread1でvalue1がロックされている
@@ -105,7 +107,6 @@ fn main() {
         for t in vec![thread1, thread2] {
             t.join().unwrap();
         }
-
     }
 
 }

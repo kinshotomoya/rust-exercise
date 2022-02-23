@@ -6,7 +6,7 @@ use std::thread::JoinHandle;
 
 pub struct ThreadPool {
     threads: Vec<Worker>,
-    sender: mpsc::Sender<Job>
+    sender: mpsc::Sender<Message>
 }
 
 pub trait FnBox {
@@ -52,34 +52,67 @@ impl ThreadPool {
     // Fは、FnOnce() + Send + 'staticの三つ継承している感じ
     pub fn execute<F>(&self, f: F) where F: FnBox + Send + 'static {
         let job = Box::new(f);
-        self.sender.send(job).unwrap();
+        self.sender.send(Message::NewJob(job)).unwrap();
 
     }
 
 }
 
+// ThreadPoolがdropされる前に、保持しているworker（thread）の後処理をする必要がある
+impl Drop for ThreadPool {
+    fn drop(&mut self) {
+        for _ in &mut self.threads {
+            // 各workerにloop停止のmessageを送っている
+            self.sender.send(Message::Terminate).unwrap();
+        }
+        println!("shutting down all workers");
+
+        for worker in &mut self.threads {
+            println!("shutting down worker: {}", worker.id);
+            if let Some(thread) = worker.thread.take() {
+                // joinメソッドは、所有権を奪う必要意があるので、このような作りにしている
+                thread.join().unwrap();
+            }
+        }
+
+    }
+}
+
+enum Message {
+    NewJob(Job),
+    Terminate,
+}
 
 pub struct Worker {
     id: usize,
-    thread: thread::JoinHandle<Arc<Mutex<mpsc::Receiver<Job>>>>
+    thread: Option<thread::JoinHandle<()>>
 }
 
 impl Worker {
-    fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Job>>>) -> Worker {
-        let thread: JoinHandle<Arc<Mutex<Receiver<Job>>>> = thread::spawn(move ||{
+    fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Message>>>) -> Worker {
+        let thread = thread::spawn(move ||{
+            // 永遠にループしているので、senderからmessageが送られてきたメッセージをreceiverが受け取って、
+            // それぞれのworkerが処理している
+            // jvmのthread poolもこんな感じのloop処理になっている
             loop {
-                let job = receiver.lock().unwrap().recv().unwrap();
-
-                println!("worker id: {}", id);
-                // Box<T>に格納したクロージャの所有権を奪って、実行したいが
-                // コンパイルすると怒られる。
-                // 実行しようとするクロージャのサイズがわからないからだ。
-                job.call_box();
+                let message = receiver.lock().unwrap().recv().unwrap();
+                match message {
+                    Message::NewJob(job) => {
+                        println!("worker id: {}", id);
+                        // Box<T>に格納したクロージャの所有権を奪って、実行したいが
+                        // コンパイルすると怒られる。
+                        // 実行しようとするクロージャのサイズがわからないからだ。
+                        job.call_box();
+                    },
+                    Message::Terminate => {
+                        break;
+                    }
+                }
             }
         });
         Worker {
             id,
-            thread
+            thread: Some(thread)
         }
     }
 

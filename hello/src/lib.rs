@@ -59,6 +59,7 @@ impl ThreadPool {
 }
 
 // ThreadPoolがdropされる前に、保持しているworker（thread）の後処理をする必要がある
+// 参考：https://doc.rust-jp.rs/book-ja/ch20-03-graceful-shutdown-and-cleanup.html
 impl Drop for ThreadPool {
     fn drop(&mut self) {
         for _ in &mut self.threads {

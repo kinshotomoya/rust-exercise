@@ -10,6 +10,10 @@ use tokio::net::TcpListener;
 // use tokio_util::codec;
 // use tokio_util::codec::{BytesCodec, Decoder};
 use serde::{Deserialize, Serialize};
+use signal_hook::consts::SIGINT;
+use signal_hook::iterator::backend::PollResult::Signal;
+use signal_hook::iterator::{Signals, SignalsInfo};
+use tokio::signal::ctrl_c;
 
 // tokioを使ってweb serverを実装
 // 参考：https://github.com/tokio-rs/tokio/blob/master/examples/echo.rs
@@ -40,8 +44,7 @@ use serde::{Deserialize, Serialize};
 // }
 
 
-// TODO: axumを使ってweb server作る
-// 次回シグナルハンドリングできるところまでやる
+// axum sample
 // 参考： https://github.com/tokio-rs/axum/blob/main/examples/readme/src/main.rs
 #[tokio::main]
 async fn main() {
@@ -51,6 +54,24 @@ async fn main() {
         .route("user", post(create_user));
 
     let socket = SocketAddr::from(([127, 0, 0, 1], 8080));
+
+    // TODO: シグナルハンドリング
+    // 参考：https://rust-cli.github.io/book/in-depth/signals.html
+    // ctrlc crateを使うとCTRL + Cのシグナルと受け取ることができる
+    // ただこれだとctrl cのシグナルしかハンドリングできない
+    // ctrlc::set_handler(|| {
+    //     println!("receive!!!");
+    //     // ↓こんな感じでプロセス殺せる
+    //     std::process::exit(1)
+    // }).expect("fail");
+
+
+    let mut signals: SignalsInfo = Signals::new(&[SIGINT]).expect("");
+    // mainスレッドで↓このようにシグナル待ちをしてしまうと、後続のweb serverの立ち上げができなくなるので
+    // シグナル処理は別スレッドで行う必要がある
+    for sig in signals.forever() {
+        println!("sss");
+    }
 
     axum::Server::bind(&socket).serve(app.into_make_service()).await.unwrap();
 }

@@ -11,5 +11,5 @@ tokio-util = { version = "0.7.0", features = ["full"] }
 axum = {version = "0.4.8"}
 serde = {version = "1.0.136", features = ["derive"]} # features = ["derive"]を指定しないとderiveでSerialize, Deserialize指定できない
 ctrlc = {version = "3.2.1"}
-signal-hook = {version = "0.3.13"}
+signal-hook = {version = "0.3.13", features = ["extended-siginfo"]}
 

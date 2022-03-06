@@ -1,3 +1,4 @@
+use std::fmt::format;
 use std::net::SocketAddr;
 use std::thread;
 use std::time::Duration;
@@ -10,10 +11,12 @@ use tokio::net::TcpListener;
 // use tokio_util::codec;
 // use tokio_util::codec::{BytesCodec, Decoder};
 use serde::{Deserialize, Serialize};
-use signal_hook::consts::SIGINT;
+use signal_hook::consts::{SIGINT, SIGTERM};
 use signal_hook::iterator::backend::PollResult::Signal;
 use signal_hook::iterator::{Signals, SignalsInfo};
+use signal_hook::iterator::exfiltrator::WithOrigin;
 use tokio::signal::ctrl_c;
+use tokio::signal::unix::signal;
 
 // tokioを使ってweb serverを実装
 // 参考：https://github.com/tokio-rs/tokio/blob/master/examples/echo.rs
@@ -57,6 +60,7 @@ async fn main() {
 
     // TODO: シグナルハンドリング
     // 参考：https://rust-cli.github.io/book/in-depth/signals.html
+    // 方法1
     // ctrlc crateを使うとCTRL + Cのシグナルと受け取ることができる
     // ただこれだとctrl cのシグナルしかハンドリングできない
     // ctrlc::set_handler(|| {
@@ -66,11 +70,50 @@ async fn main() {
     // }).expect("fail");
 
 
-    let mut signals: SignalsInfo = Signals::new(&[SIGINT]).expect("");
+    // 方法2
+    // let mut signals: SignalsInfo = Signals::new(&[SIGINT]).expect("");
     // mainスレッドで↓このようにシグナル待ちをしてしまうと、後続のweb serverの立ち上げができなくなるので
     // シグナル処理は別スレッドで行う必要がある
-    for sig in signals.forever() {
-        println!("sss");
+    // thread::spawn(move || {
+    //     for sig in signals.forever() {
+    //         println!("sss");
+    //         std::process::exit(1);
+    //     }
+    // });
+
+    // 方法3
+    // channelを使って処理する
+    let (tx, rx) = tokio::sync::oneshot::channel::<Command>();
+
+    tokio::spawn(async move {
+        let mut signals = SignalsInfo::<WithOrigin>::new(&[SIGINT, SIGTERM]).expect("fail signal");
+        let handle = signals.handle();
+        // ↓for loopにライフタイムを
+        // breakは内側のloopに対して実行されるので、loopが入れ子になっている場合はloopにラベリングできる
+        // ex
+        // 'a: loop {
+        //         break 'a;
+        // }
+        for signal in &mut signals {
+            match signal.signal {
+                SIGINT | SIGTERM => {
+                    tx.send(Command::Kill(String::from(""))).unwrap();
+                    // ↓ここでbreakしないと、txのmove問題でコンパイルエラー起きる
+                    // sendメソッドはtxの所有権を奪うのでloopで複数かtxは利用できないから
+                    break;
+                },
+                _ => unreachable!()
+            }
+        }
+    });
+
+    // serverと同じレベルで動かせるように
+    let command = rx.await.expect("");
+    match command {
+        Command::Kill(msg) => {
+            println!("kill process");
+            std::process::exit(1)
+        }
     }
 
     axum::Server::bind(&socket).serve(app.into_make_service()).await.unwrap();
@@ -98,4 +141,9 @@ struct CreateUser {
 struct User {
     id: u64,
     user_name: String,
+}
+
+#[derive(Debug)]
+enum Command {
+    Kill(String)
 }

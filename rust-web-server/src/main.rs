@@ -57,8 +57,6 @@ async fn main() {
         .route("user", post(create_user));
 
     let socket = SocketAddr::from(([127, 0, 0, 1], 8080));
-
-    // TODO: シグナルハンドリング
     // 参考：https://rust-cli.github.io/book/in-depth/signals.html
     // 方法1
     // ctrlc crateを使うとCTRL + Cのシグナルと受け取ることができる
@@ -85,7 +83,7 @@ async fn main() {
     // channelを使って処理する
     let (tx, rx) = tokio::sync::oneshot::channel::<Command>();
 
-    tokio::spawn(async move {
+    let signal_handle_thread = tokio::spawn(async move {
         let mut signals = SignalsInfo::<WithOrigin>::new(&[SIGINT, SIGTERM]).expect("fail signal");
         let handle = signals.handle();
         // ↓for loopにライフタイムを
@@ -97,7 +95,8 @@ async fn main() {
         for signal in &mut signals {
             match signal.signal {
                 SIGINT | SIGTERM => {
-                    tx.send(Command::Kill(String::from(""))).unwrap();
+                    // oneshot channelでは一つのメッセージしか送らなくて待ち時間は発生しないので、asyncではない
+                    tx.send(Command::Kill(String::from("kill"))).unwrap();
                     // ↓ここでbreakしないと、txのmove問題でコンパイルエラー起きる
                     // sendメソッドはtxの所有権を奪うのでloopで複数かtxは利用できないから
                     break;
@@ -107,16 +106,30 @@ async fn main() {
         }
     });
 
-    // serverと同じレベルで動かせるように
-    let command = rx.await.expect("");
-    match command {
-        Command::Kill(msg) => {
-            println!("kill process");
-            std::process::exit(1)
+    let server = axum::Server::bind(&socket).serve(app.into_make_service());
+    let graceful = server.with_graceful_shutdown(async {
+        // 引数に渡したfutureのクロージャが完了したらgraceful shutdownされる様な設定
+        // txからのコマンドを待っている
+        match rx.await.ok() {
+            Some(Command::Kill(s)) => println!("get the command: {}", s),
+            None => println!("nothing to do")
         }
+    });
+
+    // graceful shutdownの完了を待っている
+    match graceful.await {
+        Ok(_) => println!("graceful shutdown correctly"),
+        Err(e) => eprintln!("{}", e)
     }
 
-    axum::Server::bind(&socket).serve(app.into_make_service()).await.unwrap();
+    // signal handling threadがちゃんと終わってからmain threadを終わらせるために必要
+    // thread::spawnでいう thread.join()と同じ
+    signal_handle_thread.await;
+
+    // TODO:
+    // 1. リファクタリング
+    // 2.ログの設定
+
 }
 
 async fn root() -> &'static str{

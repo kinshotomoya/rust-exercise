@@ -1,3 +1,8 @@
+// このmodを定義することでmainのmodule treeに登録している感じ
+mod signal_handling;
+mod server;
+mod route;
+use std::collections::HashMap;
 use std::fmt::format;
 use std::net::SocketAddr;
 use std::thread;
@@ -17,6 +22,7 @@ use signal_hook::iterator::{Signals, SignalsInfo};
 use signal_hook::iterator::exfiltrator::WithOrigin;
 use tokio::signal::ctrl_c;
 use tokio::signal::unix::signal;
+use crate::signal_handling::Command;
 
 // tokioを使ってweb serverを実装
 // 参考：https://github.com/tokio-rs/tokio/blob/master/examples/echo.rs
@@ -51,11 +57,6 @@ use tokio::signal::unix::signal;
 // 参考： https://github.com/tokio-rs/axum/blob/main/examples/readme/src/main.rs
 #[tokio::main]
 async fn main() {
-
-    let app = Router::new()
-        .route("/", get(root))
-        .route("user", post(create_user));
-
     let socket = SocketAddr::from(([127, 0, 0, 1], 8080));
     // 参考：https://rust-cli.github.io/book/in-depth/signals.html
     // 方法1
@@ -84,81 +85,21 @@ async fn main() {
     let (tx, rx) = tokio::sync::oneshot::channel::<Command>();
 
     let signal_handle_thread = tokio::spawn(async move {
-        let mut signals = SignalsInfo::<WithOrigin>::new(&[SIGINT, SIGTERM]).expect("fail signal");
-        let handle = signals.handle();
-        // ↓for loopにライフタイムを
-        // breakは内側のloopに対して実行されるので、loopが入れ子になっている場合はloopにラベリングできる
-        // ex
-        // 'a: loop {
-        //         break 'a;
-        // }
-        for signal in &mut signals {
-            match signal.signal {
-                SIGINT | SIGTERM => {
-                    // oneshot channelでは一つのメッセージしか送らなくて待ち時間は発生しないので、asyncではない
-                    tx.send(Command::Kill(String::from("kill"))).unwrap();
-                    // ↓ここでbreakしないと、txのmove問題でコンパイルエラー起きる
-                    // sendメソッドはtxの所有権を奪うのでloopで複数かtxは利用できないから
-                    break;
-                },
-                _ => unreachable!()
-            }
-        }
+        signal_handling::signal_handling(tx)
     });
 
-    let server = axum::Server::bind(&socket).serve(app.into_make_service());
-    let graceful = server.with_graceful_shutdown(async {
-        // 引数に渡したfutureのクロージャが完了したらgraceful shutdownされる様な設定
-        // txからのコマンドを待っている
-        match rx.await.ok() {
-            Some(Command::Kill(s)) => println!("get the command: {}", s),
-            None => println!("nothing to do")
-        }
-    });
 
-    // graceful shutdownの完了を待っている
-    match graceful.await {
-        Ok(_) => println!("graceful shutdown correctly"),
-        Err(e) => eprintln!("{}", e)
-    }
-
+    // awaitしないとserver起動しない
+    // run_serverメソッドはasyncになっていてmainスレッドで待ってあげないと、下の処理に進んでしまう
+    server::run_server(socket, rx).await;
     // signal handling threadがちゃんと終わってからmain threadを終わらせるために必要
     // thread::spawnでいう thread.join()と同じ
     signal_handle_thread.await;
 
     // TODO:
+    // async awaitをちゃんと理解する
     // 1. 別のシグナル受け取れるようにする（他にどんなシグナルが送れるのだろう？）
-    // 1-1. channelとは？
     // 2. リファクタリング
     // 3. ログの設定
 
-}
-
-async fn root() -> &'static str{
-    "hello world"
-}
-
-async fn create_user(Json(payload): Json<CreateUser>) -> impl IntoResponse {
-    let user = User {
-        id: 1,
-        user_name: payload.username
-    };
-    (StatusCode::CREATED, Json(user))
-}
-
-#[derive(Deserialize)]
-struct CreateUser {
-    username: String,
-}
-
-// the output to our `create_user` handler
-#[derive(Serialize)]
-struct User {
-    id: u64,
-    user_name: String,
-}
-
-#[derive(Debug)]
-enum Command {
-    Kill(String)
 }

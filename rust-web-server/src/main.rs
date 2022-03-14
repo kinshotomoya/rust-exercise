@@ -97,13 +97,9 @@ async fn main() {
     signal_handle_thread.await;
 
     // TODO:
-    // async awaitをちゃんと理解する
-    // 1. 別のシグナル受け取れるようにする（他にどんなシグナルが送れるのだろう？）
-    // 2. リファクタリング
-    // 3. ログの設定
-
-    let mut composer = Vec::new();
-    composer.push("a");
-    composer[1];
-
+    //  async awaitをちゃんと理解する
+    //  1. ログの設定
+    //  2. configの設定
+    //  3. httpClient（connection pool）で外部APIを叩けるように
+    //  4. 別スレッドでredisサーバを叩くように
 }

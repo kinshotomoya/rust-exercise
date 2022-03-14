@@ -102,4 +102,8 @@ async fn main() {
     // 2. リファクタリング
     // 3. ログの設定
 
+    let mut composer = Vec::new();
+    composer.push("a");
+    composer[1];
+
 }

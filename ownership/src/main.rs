@@ -96,5 +96,23 @@ fn main() {
     }
 
 
+    {
 
+        // このように自前型でも保持しているフィールドがprimitiveな型のみなら、
+        // コピーするようにできる
+        #[derive(Debug, Copy, Clone)]
+        struct Label {
+            number: u32
+        }
+
+        fn print(l: Label) {
+            println!("{:?}", l);
+        }
+
+        let l = Label {number: 21};
+        print(l);
+        print(l);
+
+
+    }
 }

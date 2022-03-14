@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 fn main() {
     // 参照
 
@@ -65,14 +67,14 @@ fn main() {
     // ポインタだけ残って、参照先データが消えてしまうことが他の言語では発生する可能性がある
     // rustはコンパイラがそれを防いでくれている
 
-    let nothing = dungle();
-
-    fn dungle() -> &String {
-        // 参照を返しているが、この関数を抜けると参照先データ（s）は削除されるので
-        // ポインタだけ浮いてしまう
-        let s = String::from("dungle");
-        &s
-    }
+    // let nothing = dungle();
+    //
+    // fn dungle() -> &String {
+    //     // 参照を返しているが、この関数を抜けると参照先データ（s）は削除されるので
+    //     // ポインタだけ浮いてしまう
+    //     let s = String::from("dungle");
+    //     &s
+    // }
 
     //　これを防ぐにはただStringを返すようにすればいい。（所有権がムーブされる）
 
@@ -82,5 +84,14 @@ fn main() {
         let s = String::from("dungle2");
         s
     } // sは無効化される
+
+
+    {
+
+        let name = Rc::new("kinsho".to_string());
+        let name1 = name.clone();
+        let name2 = name.clone();
+
+    }
 
 }

@@ -88,7 +88,6 @@ async fn main() {
         signal_handling::signal_handling(tx)
     });
 
-
     // awaitしないとserver起動しない
     // run_serverメソッドはasyncになっていてmainスレッドで待ってあげないと、下の処理に進んでしまう
     server::run_server(socket, rx).await;

@@ -84,6 +84,8 @@ async fn main() {
     // channelを使って処理する
     let (tx, rx) = tokio::sync::oneshot::channel::<Command>();
 
+    // tokio::spawnは別スレッドを作成しているわけではない
+    // 非同期タスクを作って、同一スレッドで渡した処理をさせている
     let signal_handle_thread = tokio::spawn(async move {
         signal_handling::signal_handling(tx)
     });

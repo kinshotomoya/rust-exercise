@@ -5,13 +5,16 @@ use async_std::task;
 // async {}で非同期タスクは作れるが、実行する環境（ランタイム）がない
 // // 非同期タスクを開始・実行・監視・完了させるために、非同期ランタイムであるtokioやasync-std crateを利用する
 fn main() {
-    let heavy_task = task::spawn_local(async {
+    let heavy_task = task::spawn(async {
         print_thread_info();
+        for i in 1..1000000 {
+            println!("{}", i);
+        };
         task::sleep(Duration::from_secs(10)).await;
         println!("heavy!!!!");
     });
 
-    let light_task = task::spawn_local(async {
+    let light_task = task::spawn(async {
         print_thread_info();
         task::sleep(Duration::from_secs(3)).await;
         println!("light!!!!");
@@ -19,12 +22,14 @@ fn main() {
 
     // Futureではないblockingな処理は、blocking専用スレッドプールが存在するので
     // そちらに処理を渡すべき
-    // let blocking_task = task::spawn_blocking(|| {
-    //     print_thread_info();
-    //     std::thread::sleep(Duration::from_secs(5));
-    // });
+    // 非同期タスクを実行するスレッドプールを枯渇させないために
+    let blocking_task = task::spawn_blocking(|| {
+        print_thread_info();
+        task::sleep(Duration::from_secs(5)).await;
+        println!("blocking task!")
+    });
 
-    let tasks = vec![heavy_task, light_task];
+    let tasks = vec![heavy_task, light_task, blocking_task];
     println!("not async task!");
 
     // task::block_onは引数に渡した非同期タスクが完了するまでcurrent threadをブロックする

@@ -17,7 +17,14 @@ fn main() {
         println!("light!!!!");
     });
 
-    let tasks = vec![heavy_task, light_task];
+    // Futureではないblockingな処理は、blocking専用スレッドプールが存在するので
+    // そちらに処理を渡すべき
+    let blocking_task = task::spawn_blocking(|| {
+        print_thread_info();
+        std::thread::sleep(Duration::from_secs(5));
+    });
+
+    let tasks = vec![heavy_task, light_task, blocking_task];
     println!("not async task!");
 
     // task::block_onは引数に渡した非同期タスクが完了するまでcurrent threadをブロックする
@@ -27,6 +34,7 @@ fn main() {
             task.await;
         }
     });
+
     println!("all task completed!");
 }
 
@@ -37,3 +45,6 @@ fn print_thread_info() {
     let thread_id = current_thread.id();
     println!("{}-{:?}", thread_name, thread_id);
 }
+
+// TODO: 非同期処理の大枠は理解したので、詳細深掘りするためにtokioチュートリアル進める
+// 公式ドキュメント：https://zenn.dev/magurotuna/books/tokio-tutorial-ja/viewer

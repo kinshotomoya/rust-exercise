@@ -2,6 +2,7 @@
 mod signal_handling;
 mod server;
 mod route;
+mod hasher;
 use std::collections::HashMap;
 use std::fmt::format;
 use std::net::SocketAddr;

@@ -7,9 +7,6 @@ use async_std::task;
 fn main() {
     let heavy_task = task::spawn(async {
         print_thread_info();
-        for i in 1..1000000 {
-            println!("{}", i);
-        };
         task::sleep(Duration::from_secs(10)).await;
         println!("heavy!!!!");
     });
@@ -25,7 +22,7 @@ fn main() {
     // 非同期タスクを実行するスレッドプールを枯渇させないために
     let blocking_task = task::spawn_blocking(|| {
         print_thread_info();
-        task::sleep(Duration::from_secs(5)).await;
+        task::sleep(Duration::from_secs(5));
         println!("blocking task!")
     });
 

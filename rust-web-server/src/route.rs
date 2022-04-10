@@ -12,6 +12,16 @@ pub fn route() -> Router {
         .route("/", get(root))
         .route("user", post(create_user))
         .route("/async_sync", get(async_sync))
+        .route("/future", get(future))
+}
+
+
+async fn future() -> String {
+    std::thread::spawn(|| {
+        std::thread::sleep(Duration::from_secs(5));
+        println!("sssssss");
+    });
+    String::from("com")
 }
 
 

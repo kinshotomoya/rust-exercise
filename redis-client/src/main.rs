@@ -1,7 +1,8 @@
+mod connection;
+
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use mini_redis::client::Client;
-use mini_redis::{Command, Connection, Frame};
+use mini_redis::{Command, Frame};
 use mini_redis::Command::{Set, Get};
 use tokio::net::{TcpListener, TcpStream};
 
@@ -28,21 +29,20 @@ async fn main() {
 }
 
 // redisコマンドを受け付けて、db（メモリ、hashMap）に保存する」
-async fn process(socket: TcpStream, dbMutext: DbType) {
-
-    let mut connection = Connection::new(socket);
+async fn process(socket: TcpStream, db_mutext: DbType) {
+    let mut connection = mini_redis::Connection::new(socket);
     while let Some(frame) = connection.read_frame().await.unwrap() {
         let response = match Command::from_frame(frame).unwrap() {
             Set(cmd) => {
                 // NOTE: tokioのランタイムは.awaitのところでタスクを別スレッドに移す可能性があるが
                 // 今回で言うとdb（MutexGuard）はSend traitを実装していないので、別スレッドに移すことができない
                 // なのでコンパイラエラーになってしまう
-                let mut db = dbMutext.lock().unwrap();
-                db.insert(cmd.key().to_string(),cmd.value().to_vec());
+                let mut db = db_mutext.lock().unwrap();
+                db.insert(cmd.key().to_string(), cmd.value().to_vec());
                 Frame::Simple("OK".to_string())
             }
             Get(cmd) => {
-                let mut db = dbMutext.lock().unwrap();
+                let db = db_mutext.lock().unwrap();
                 if let Some(va) = db.get(cmd.key()) {
                     Frame::Bulk(va.clone().into())
                 } else {
@@ -53,6 +53,6 @@ async fn process(socket: TcpStream, dbMutext: DbType) {
         };
 
         connection.write_frame(&response).await.unwrap();
+    };
 
-    }
 }

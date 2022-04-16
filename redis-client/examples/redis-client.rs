@@ -23,7 +23,7 @@ pub async fn main() {
     let task2 = tokio::spawn(async move {
         // NOTE: redis serverからの結果を受け取るためにそれ用のチャネルを作成する
         let (one_tx, one_rx) = tokio::sync::oneshot::channel();
-        // NOTE: menagerタスク側がserverから受け取ったレスポンスをone_txを通して送る
+        // NOTE: managerタスク側がserverから受け取ったレスポンスをone_txを通して送る
         set_tx.send(Command::Set {key: String::from("hello"), value: "world".into(), sender: one_tx}).await;
         // NOTE: one_tx（managerタスク）からのメッセージを待つ
         let res = one_rx.await;

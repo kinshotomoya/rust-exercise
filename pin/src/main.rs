@@ -97,7 +97,7 @@ fn main() {
 #[derive(Debug)]
 struct SelfRefPin {
     x: i32,
-    ptr_x: *const i32,
+    ptr_x: *const i32, // 生ポインタを表している
     // これはこのオブジェクトはUnpinを実装してないと宣言している。Unpinは基本的にどの型もデフォルトで実装されている。
     // UnpinはムーブしてもOkということを宣言しているもの
     // これがないとムーブされてしまう

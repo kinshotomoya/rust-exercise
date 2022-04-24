@@ -14,6 +14,7 @@ use crossbeam::channel;
 
 fn main() {
     let mut mini_tokio = MiniTokio::new();
+    // このタスクが2番目に実行結果返る
     mini_tokio.spawn(async {
 
         let when = Instant::now() + Duration::from_secs(10);
@@ -23,9 +24,10 @@ fn main() {
     });
 
 
+    // このタスクが最初に実行結果返る
     mini_tokio.spawn(async {
 
-        let when = Instant::now() + Duration::from_secs(12);
+        let when = Instant::now() + Duration::from_secs(1);
         let future = Delay { when };
 
         let out = future.await;

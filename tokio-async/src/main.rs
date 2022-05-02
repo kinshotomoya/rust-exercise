@@ -8,7 +8,6 @@ use tokio::net::TcpListener;
 #[tokio::main]
 async fn main(){
 
-
     println!("start");
     println!("{:?}", std::thread::current().name());
     // rustはデフォルトで非同期タスクを実行するruntimeを備えていないのでtokioなどのcrateを利用する必要がある

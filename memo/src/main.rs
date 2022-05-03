@@ -1,4 +1,6 @@
 use std::collections::{HashMap, HashSet, LinkedList};
+use std::error::Error;
+use std::fmt::Formatter;
 
 
 fn main() {
@@ -41,6 +43,56 @@ fn main() {
         }
         println!("{:?}", list);
         println!("{:?}", hash_map);
+
+    }
+
+    // カスタムエラー型を定義
+    // ↓こんな感じでErrorを実装したりなど手間がかかる
+    {
+        #[derive(Debug, Clone)]
+        struct JsonError {
+            pub message: String,
+            pub line: usize,
+            pub column: usize
+        }
+
+        // Displayを実装しないといけない
+        impl std::fmt::Display for JsonError {
+            fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+                write!(f, "")
+            }
+        }
+
+        // カスタムのエラー型が標準エラーと同じように使えるようにするには、
+        // std::error::Errorを実装している必要がある
+
+        impl std::error::Error for JsonError{}
+
+        fn return_result<T>() -> Result<T, JsonError> {
+            Err(
+                JsonError {
+                    message: String::from(""),
+                    line: 1,
+                    column: 2
+                }
+            )
+        }
+
+    }
+
+    // thiserrorクレートを使う
+    {
+        use thiserror::Error;
+
+        // thiserrorクレートを使うとErrorの実装などの手間が省ける
+        // #[derive(Error)]がthiserrorを使う
+        #[derive(Error, Debug)]
+        #[error("{message}")]
+        struct JsonError {
+            pub message: String,
+            pub line: usize,
+            pub column: usize
+        }
 
     }
 

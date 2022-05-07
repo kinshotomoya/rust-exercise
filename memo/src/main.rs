@@ -110,6 +110,29 @@ fn main() {
 
         }
 
+        impl<T> BinaryTree<T> where T: Ord {
+            fn add(&mut self, value: T) {
+                match *self {
+                    BinaryTree::Empty => {
+                        *self = BinaryTree::NonEmpty(Box::new(
+                            TreeNode {
+                                element: value,
+                                left: BinaryTree::Empty,
+                                right: BinaryTree::Empty
+                            }
+                        ))
+                    }
+                    BinaryTree::NonEmpty(ref mut node) => {
+                        if value <= node.element  {
+                            node.left.add(value)
+                        } else {
+                            node.right.add(value)
+                        }
+                    }
+                }
+            }
+        }
+
         #[derive(Debug)]
         struct TreeNode<T> {
             element: T,
@@ -147,8 +170,29 @@ fn main() {
             )
         );
 
-        println!("{:?}", root_tree);
+        let mut tree = BinaryTree::Empty;
+        tree.add("s");
+        tree.add("wee");
 
+        println!("{:?}", tree);
+
+    }
+
+    {
+        #[derive(Debug)]
+        struct Account {
+            name: String,
+            language: String
+        }
+
+        let account = Account{name: String::from("tomoya"),language: String::from("japanese")};
+
+        match account {
+            Account{ref name, ref language} => {
+                println!("{:?}", account);
+                println!("{}, {}", name, language);
+            }
+        }
     }
 
 

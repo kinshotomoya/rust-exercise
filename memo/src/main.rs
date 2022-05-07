@@ -96,6 +96,61 @@ fn main() {
 
     }
 
+    {
+        enum Animal {
+            Person,
+            Fish(String),
+            Mammalian {id: u32, code: String}
+        }
+
+        #[derive(Debug)]
+        enum BinaryTree<T> {
+            Empty,
+            NonEmpty(Box<TreeNode<T>>)
+
+        }
+
+        #[derive(Debug)]
+        struct TreeNode<T> {
+            element: T,
+            left: BinaryTree<T>,
+            right: BinaryTree<T>
+        }
+
+        let brother_node = BinaryTree::NonEmpty(
+            Box::new(TreeNode {
+                element: "brother",
+                left: BinaryTree::Empty,
+                right: BinaryTree::Empty
+            })
+        );
+
+        let sister_node = BinaryTree::NonEmpty(
+            Box::new(TreeNode {
+                element: "sister",
+                left: BinaryTree::Empty,
+                right: BinaryTree::Empty
+            })
+        );
+
+        let mother_node = TreeNode {
+            element: "mother",
+            left: brother_node,
+            right: sister_node
+        };
+
+        // NonEmptyの要素をBoxにすることでヒープに割り当てることができるようになり、
+        // 問題なくこなせるようになる
+        let root_tree = BinaryTree::NonEmpty(
+            Box::new(
+                mother_node
+            )
+        );
+
+        println!("{:?}", root_tree);
+
+    }
+
 
 }
 

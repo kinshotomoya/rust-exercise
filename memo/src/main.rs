@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet, LinkedList};
 use std::error::Error;
 use std::fmt::Formatter;
+use std::io::Write;
 
 
 fn main() {
@@ -193,6 +194,27 @@ fn main() {
                 println!("{}, {}", name, language);
             }
         }
+    }
+
+
+    // trait詳細
+
+    {
+        // dynは dynamic dispatchを表している
+        // traitは動的ディスパッチが必要である。なぜならコンパイル時に明確な型がわからないから
+        // 静的にディスパッチできないから
+
+        let mut buf: Vec<u8> = vec![];
+        let writer: &mut dyn Write = &mut buf;
+    }
+
+    {
+        // 定数ジェネリクスを定義することもできる
+        fn push<const N: usize>(first: [f64; N], second: [f64; N]) -> [f64; N] {
+            first
+        };
+
+
     }
 
 

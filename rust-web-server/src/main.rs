@@ -110,8 +110,7 @@ async fn main() {
     signal_handle_thread.await;
 
     // TODO:
-    //  1. ログの設定
-    //  2. configの設定
     //  3. httpClient（connection pool）で外部APIを叩けるように
-    //  4. 別スレッドでredisサーバを叩くように
+    //  4. actorを実装!!
+    //  5. 別スレッドでredisサーバを叩くように
 }

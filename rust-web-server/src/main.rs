@@ -4,6 +4,7 @@ mod server;
 mod route;
 mod hasher;
 mod trace;
+mod setting;
 use std::collections::HashMap;
 use std::fmt::format;
 use std::net::SocketAddr;
@@ -24,7 +25,7 @@ use signal_hook::iterator::{Signals, SignalsInfo};
 use signal_hook::iterator::exfiltrator::WithOrigin;
 use tokio::signal::ctrl_c;
 use tokio::signal::unix::signal;
-use tracing::debug;
+use tracing::{debug, info};
 use crate::signal_handling::Command;
 
 // tokioを使ってweb serverを実装
@@ -83,10 +84,13 @@ async fn main() {
     //     }
     // });
 
-    // tracingの設定
-    trace::setting_trace();
+    // 設定ファイルの読み込み
+    let env = std::env::var("RUN_ENV").expect("fail to load env");
+    let settings = setting::Settings::new(env).expect("fail to load config file");
 
-    debug!("?????");
+    // tracingの設定
+    trace::setting_trace(&settings);
+
 
     // 方法3
     // channelを使って処理する

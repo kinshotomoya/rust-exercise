@@ -3,6 +3,7 @@ mod signal_handling;
 mod server;
 mod route;
 mod hasher;
+mod trace;
 use std::collections::HashMap;
 use std::fmt::format;
 use std::net::SocketAddr;
@@ -23,6 +24,7 @@ use signal_hook::iterator::{Signals, SignalsInfo};
 use signal_hook::iterator::exfiltrator::WithOrigin;
 use tokio::signal::ctrl_c;
 use tokio::signal::unix::signal;
+use tracing::debug;
 use crate::signal_handling::Command;
 
 // tokioを使ってweb serverを実装
@@ -81,6 +83,11 @@ async fn main() {
     //     }
     // });
 
+    // tracingの設定
+    trace::setting_trace();
+
+    debug!("?????");
+
     // 方法3
     // channelを使って処理する
     let (tx, rx) = tokio::sync::oneshot::channel::<Command>();
@@ -99,7 +106,6 @@ async fn main() {
     signal_handle_thread.await;
 
     // TODO:
-    //  async awaitをちゃんと理解する
     //  1. ログの設定
     //  2. configの設定
     //  3. httpClient（connection pool）で外部APIを叩けるように

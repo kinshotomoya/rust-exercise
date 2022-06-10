@@ -73,6 +73,43 @@ fn main() {
 
     }
 
+    {
+        #[derive(Debug)]
+        struct Response {
+            name: String,
+            id: String
+        }
+
+        // partial moveすることができる
+        let res = Response { name: String::from("kinsho"), id: String::from("123")};
+        let name2 = res.name; // この時点でnameの所有権はname2に移っている
+        println!("{:?}", res.id); // idの所有権は健在（まだresにある）なので、利用できる（moveできる）
+        // println!("{:?}", res) // nameの所有権がname2に移っているので、resは利用できない（moveできない）
+
+
+
+    }
+
+    {
+        #[derive(Debug)]
+        struct Response {
+            name: String,
+            id: String
+        }
+
+        struct Response2 {
+            name: String,
+            id: String
+        }
+
+        let res = Response { name: String::from("kinsho"), id: String::from("123")};
+        let res2 = Response2 {
+            name: res.name,
+            id: res.id
+        };
+
+    }
+
 
 
 }
